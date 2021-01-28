@@ -1,0 +1,90 @@
+---
+title: "Exercises: Shell, git, and GitHub"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Navigate to directory `cl_demo/`. Explore and map out everything in
+`cl_demo/`. Draw a tree diagram as in the slide titled Path Diagram.
+
+## Solution
+
+You should see there exists a `README.md` and three directories: `data/`,
+`scripts/`, and `simulation/`.
+
+In `data/` we have `cars.txt`, `diamonds.txt`, and `mtcars.txt`.
+In `scripts/` we have `generate_data.R`, `plot_data.R`, `summarise_data.R`.
+In `simulation/` we have 592 `.txt` files.
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create two new folders in `cl_demo/simulation/` with names `p500` and `p1000`.
+Move all simulation results with parameter $p$ being 500 to folder
+`p500/`. Similarly, move all simulation results with parameter $p$ being 1000 
+to folder `p1000/`.
+
+## Solution
+
+Assuming you start in `cl_demo/`, the commands would be
+
+```{bash, eval=FALSE}
+cd simulation/          # navigate to folder simulation/
+mkdir p500/ p1000/      # create 2 new directories
+mv *p500*.txt p500/     # move p500 files
+mv *p1000*.txt p1000/   # move p1000 files
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Which flag (option) associated with the shell command `rm` allows you to 
+delete a directory and all the files in it?
+
+## Solution
+
+Flags `-r`, `-R`, `--recursive` allow you to remove directories and their 
+contents recursively. Flags `-d` and `--dir` only allow you to remove empty
+directories.
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+How do you pull up the manual page for `git reset`? What does `git reset` do?
+
+## Solution
+
+Provided `git` is installed,
+
+```{bash, eval=FALSE}
+man git-reset
+```
+
+Dashes should link `git` and the associated command. Similarly,
+`man git-status` will display the manual page for command `git status`.
+
+Command `git reset` resets the current HEAD to the specified state. This is how
+you can undo an add, undo a commit, undo a merge or pull, and more.
+
+

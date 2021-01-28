@@ -1,0 +1,217 @@
+---
+title: "Exercises: Fundamentals of R"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+What do each of the following return? Run the code to check your answer.
+
+```{r eval=FALSE}
+if (1 == "1") "coercion  works" else "no coercion "
+
+ifelse(5 > c(1, 10, 2), "hello", "olleh")
+```
+
+## Solution
+
+```{r}
+if (1 == "1") "coercion  works" else "no coercion "
+ifelse(5 > c(1, 10, 2), "hello", "olleh")
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Consider two vectors, `x` and `y`, each of length one. Write a set of
+   conditionals that satisfy the following.
+   
+- If `x` is positive and `y` is negative or `y` is positive and `x` is
+  negative, print "knits".
+- If `x` divided by `y` is positive, print "stink".
+- Stop execution if `x` or `y` are zero.
+    
+Test your code with various `x` and `y` values. Where did you
+place the stop execution code?
+
+## Solution
+
+```{r}
+x <- 4
+y <- -10
+
+if (x == 0 | y == 0) {
+  stop("One of x or y is 0!")
+} else if (x / y > 0) {
+  print("stink")
+} else {
+  print("knits")
+}
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Consider the vector `x` below.
+
+```{r eval=FALSE}
+x <- c(3, 4, 12, 19, 23, 49, 100, 63, 70)
+```
+    
+Write R code that prints the perfect squares in `x`.
+
+## Solution
+
+```{r}
+x <- c(3, 4, 12, 19, 23, 49, 100, 63, 70)
+
+for (i in x) {
+  if (sqrt(i) %% 1) {
+    next
+  }
+  print(i)
+}
+```
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Consider `z <- c(-1, .5, 0, .5, 1)`. Write R code that prints
+the smallest non-negative integer $k$ satisfying the inequality
+$$\lvert cos(k) - z \rvert < 0.001$$
+for each component of `z`.
+
+## Solution
+
+```{r}
+for (z in c(-1, .5, 0, .5, 1)) {
+  k <- 0
+  while (abs(cos(k) - z) >= .001) {
+    k <- k + 1
+  }
+  print(k)
+}
+```
+
+# Exercise 5 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+One way to time your code in R is with `system.time()`. For example,
+
+```{r}
+system.time({
+  Sys.sleep(3) # suspend code execution for 3 seconds
+  runif(n = 1) # generate one uniform(0, 1) random variable
+})
+```
+
+calculates the elapsed time to be a little over three seconds. Most of the 
+elapsed time was due to `Sys.sleep()`. We'll discuss the `user` and `system`
+times later in the course.
+
+To quantify the inefficiency of a poorly written `for` loop, time both the 
+code blocks below. Experiment with different values of `n`. What do you
+observe?
+
+```{r eval=FALSE}
+n <- 10
+x <- 1
+for (i in seq_len(n)) {
+  x <- c(x, sqrt(x[i] * i))
+}
+```
+
+```{r eval=FALSE}
+n <- 10
+x <- rep(1, n + 1)
+for (i in seq_len(n)) {
+  x[i + 1] <- sqrt(x[i] * i)
+}
+```
+
+## Solution
+
+Loop expression 1:
+
+```{r}
+system.time({
+  n <- 100000
+  x <- 1
+  for (i in seq_len(n)) {
+    x <- c(x, sqrt(x[i] * i))
+  }
+})
+```
+
+Loop expression 2:
+
+```{r}
+system.time({
+  n <- 100000
+  x <- rep(1, n + 1)
+  for (i in seq_len(n)) {
+    x[i + 1] <- sqrt(x[i] * i)
+  }
+})
+```
+
+```{r echo=FALSE}
+library(tidyverse)
+time_loops <- function(n) {
+  loop_1 <- system.time({
+    x <- 1
+    for (i in seq_len(n)) {
+      x <- c(x, sqrt(x[i] * i))
+    }
+  })
+  
+  loop_2 <- system.time({
+    x <- rep(1, n + 1)
+    for (i in seq_len(n)) {
+      x[i + 1] <- sqrt(x[i] * i)
+    }
+  })
+  
+  tibble(
+    n = n,
+    loop_1 = loop_1[3],
+    loop_2 = loop_2[3]
+  )
+  
+}
+```
+
+```{r echo=FALSE}
+map_df(10 ^ (1:5), time_loops) %>% 
+  pivot_longer(cols = loop_1:loop_2, names_to = "loop", values_to = "time") %>% 
+  ggplot(aes(x = as.factor(n), y = time, color = loop, group = loop)) +
+  geom_point(size = 2) +
+  geom_line() +
+  scale_color_discrete(labels = c("Loop expression 1", "Loop expression 2")) +
+  scale_x_discrete(labels = c("10", "100", "1000", "10000", "100000")) +
+  labs(x = "Size of n", y = "Elapsed time in seconds", color = "Loop") +
+  theme_minimal(base_size = 16)
+```
+
+

@@ -1,0 +1,257 @@
+---
+title: "Exercises: Vectors and functions"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+What is the type of each vector below? Check your answer in R.
+
+```{r eval=FALSE}
+c(4L, 16, 0)
+c(NaN, NA, -Inf)
+c(NA, TRUE, FALSE, "TRUE")
+c(pi, NaN, NA)
+```
+
+## Solution
+
+```{r}
+typeof(c(4L, 16, 0))
+typeof(c(NaN, NA, -Inf))
+typeof(c(NA, TRUE, FALSE, "TRUE"))
+typeof(c(pi, NaN, NA))
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Write a conditional statement that prints "Can't proceed NA or NaN present!"
+if a vector contains `NA` or `NaN`. Test your code with vectors `x` and `y`
+below.
+
+```{r}
+x <- NA
+y <- c(1:5, NaN, NA, sqrt(3))
+```
+
+## Solution
+
+```{r}
+x <- NA
+y <- c(1:5, NaN, NA, sqrt(3))
+if (any(is.na(x))) {print("Can't proceed NA or NaN present!")}
+if (any(is.na(y))) {print("Can't proceed NA or NaN present!")}
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create a list in R that has a similar structure as the JSON product-order data
+below.
+
+```
+[
+ {
+  "id": {
+    "oid": "5968dd23fc13ae04d9000001"
+  },
+  "product_name": "sildenafil citrate",
+  "supplier": "Wisozk Inc",
+  "quantity": 261,
+  "unit_cost": "$10.47"
+ },
+ 
+ {
+  "id": {
+    "oid": "5968dd23fc13ae04d9000002"
+  },
+  "product_name": "Mountain Juniperus ashei",
+  "supplier": "Keebler-Hilpert",
+  "quantity": 292,
+  "unit_cost": "$8.74"
+ }
+]
+```
+
+## Solution
+
+```{r}
+x <- list(
+  list(
+    id           = list(oid = "5968dd23fc13ae04d9000001"),
+    product_name = "sildenafil citrate",
+    supplier     = "Wisozk Inc",
+    quantity     = 261,
+    unit_cost    = "$10.47"
+  ),
+  list(
+    id           = list(oid = "5968dd23fc13ae04d9000002"),
+    product_name = "Mountain Juniperus ashei",
+    supplier     = "Keebler-Hilpert",
+    quantity     = 292,
+    unit_cost    = "$8.74"
+  )
+)
+
+str(x)
+```
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Write a function called `get_vector_properties()` that takes an atomic vector
+and returns the following information in the format of a list: the vector's
+type, length, and element names. *Hint*: element names can be retrieved with
+function `names()`.
+
+```{r echo=FALSE}
+get_vector_properties <- function(x) {
+  
+  list(data_type = typeof(x),
+       length    = length(x),
+       names     = names(x)
+       )
+}
+```
+
+```{r}
+get_vector_properties(c(5, 10, -5, 8, 11, 0))
+get_vector_properties(c(a = "-1", b = "0", c = "1"))
+```
+
+## Solution
+
+```{r}
+get_vector_properties <- function(x) {
+  
+  list(data_type = typeof(x),
+       length    = length(x),
+       names     = names(x)
+       )
+}
+```
+
+# Exercise 5 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+We have seen the group membership operator `%in%`. Write an infix function
+named `%!in%` that returns `TRUE` for each component in the left operand that
+is not in the right operand. For example,
+
+```{r echo=FALSE}
+`%!in%` <- function(a, b) {
+  !(a %in% b)
+}
+```
+
+```{r}
+x <- c(4, -4, 9, 33, 1)
+y <- c(1, 44, 1, 0, 33, 10, 62)
+
+x %!in% y
+```
+
+## Solution
+
+```{r}
+`%!in%` <- function(a, b) {
+  !(a %in% b)
+}
+```
+
+```{r}
+x <- c(4, -4, 9, 33, 1)
+y <- c(1, 44, 1, 0, 33, 10, 62)
+
+x %!in% y
+```
+
+# Exercise 6 {.tabset .tabset-fade .tabset-pills}
+
+*This function requires subsetting. If you can't get this to work, that's okay. 
+We'll cover subsetting next week.*
+
+## Problem
+
+Write a function called `seq_fib()`. Function `seq_fib()` should take one 
+argument, `n` - an atomic numeric vector of length 1, and return the first `n` 
+[Fibonacci numbers](https://en.wikipedia.org/wiki/Fibonacci_number)
+as an atomic vector. Some examples of the function in 
+action are given below.
+
+```{r echo=FALSE}
+seq_fib <- function(n) {
+  # check for n to be greater than or equal to 1
+  stopifnot(length(n) == 1, n >= 1, n %/% 1 == n)
+  
+  fib.vec <- c(0, 1)
+  if (n <= 2) { # n = 1 or n = 2
+    fib.vec <- fib.vec[1:n]
+  } else {
+     for (i in 3:n) { # n >= 3
+       fib.vec[i] <- fib.vec[i - 2] + fib.vec[i - 1]
+     }
+  }
+  return(fib.vec)
+}
+```
+
+#### Valid inputs
+
+```{r results='hold'}
+seq_fib(n = 1)
+seq_fib(n = 2)
+seq_fib(n = 7)
+seq_fib(n = 10)
+```
+
+#### Invalid inputs
+
+```{r error=TRUE, results='hold'}
+seq_fib(n = -2)
+seq_fib(n = c(2, 3, 10))
+```
+
+Did you remember to handle situations such as `seq_fib(n = 4.9)`?
+
+## Solution
+
+```{r}
+seq_fib <- function(n) {
+  # check for n to be greater than or equal to 1
+  stopifnot(length(n) == 1, n >= 1, n %/% 1 == n)
+  
+  fib.vec <- c(0, 1)
+  if (n <= 2) { # n = 1 or n = 2
+    fib.vec <- fib.vec[1:n]
+  } else {
+     for (i in 3:n) { # n >= 3
+       fib.vec[i] <- fib.vec[i - 2] + fib.vec[i - 1]
+     }
+  }
+  return(fib.vec)
+}
+```
+
