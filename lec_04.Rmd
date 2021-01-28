@@ -1,0 +1,269 @@
+---
+title: "Exercises: Data structures and subsetting"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create a 3 x 3 x 2 array using the `dim` attribute with the vector below.
+
+```{r}
+x <- c(5, 1, 5, 5, 1, 1, 5, 3, 2, 3, 2, 6, 4, 4, 1, 2, 1, 3)
+```
+
+Try to create the same array using function `array()`. What do you notice about
+how the array object is populated?
+
+## Solution
+
+```{r}
+x <- c(5, 1, 5, 5, 1, 1, 5, 3, 2, 3, 2, 6, 4, 4, 1, 2, 1, 3)
+
+# set dim attribute
+attr(x = x, which = "dim") <- c(3, 3, 2)
+x
+attributes(x)
+```
+
+```{r}
+array(x, dim = c(3, 3, 2))
+```
+
+The array is populated using column-major ordering.
+
+| vector index | row | column | matrix |
+|--------------|-----|--------|--------|
+| 1            | 1   | 1      | 1      |
+| 2            | 2   | 1      | 1      |
+| 3            | 3   | 1      | 1      |
+| 4            | 1   | 2      | 1      |
+| 5            | 2   | 2      | 1      |
+| 6            | 3   | 2      | 1      |
+| 7            | 1   | 3      | 1      |
+| 8            | 2   | 3      | 1      |
+| 9            | 3   | 3      | 1      |
+| 10           | 1   | 1      | 2      |
+| 11           | 2   | 1      | 2      |
+| 12           | 3   | 1      | 2      |
+| 13           | 1   | 2      | 2      |
+| 14           | 2   | 2      | 2      |
+| 15           | 3   | 2      | 2      |
+| 16           | 1   | 3      | 2      |
+| 17           | 2   | 3      | 2      |
+| 18           | 3   | 3      | 2      |
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create a factor vector based on the vector of airport codes below. Try to do
+it without using function `factor()`.
+
+```{r}
+airports <- c("RDU", "ABE", "DTW", "GRR", "RDU", "GRR", "GNV",
+             "JFK", "JFK", "SFO", "DTW")
+```
+
+Assume all the possible levels are 
+
+```{r eval=FALSE}
+c("RDU", "ABE", "DTW", "GRR", "GNV", "JFK", "SFO")
+```
+
+*Hint*: Think about what type of object factors are built on.
+
+<br/>
+
+What if the possible levels are
+
+```{r eval=FALSE}
+c("RDU", "ABE", "DTW", "GRR", "GNV", "JFK", "SFO", "GSO", "ORD", "PHL")
+```
+
+## Solution
+
+Factors are built on atomic integer vectors. First we'll create an integer
+vector that serves as a mapping to the unique airport codes.
+
+```{r}
+z <- as.integer(c(1,2,3,4,1,4,5,6,6,7,3))
+
+# set levels
+attr(x = z, which = "levels") <- c("RDU", "ABE", "DTW", 
+                                   "GRR", "GNV", "JFK", "SFO")
+
+# set class to be factor
+attr(x = z, which = "class") <- "factor"
+z
+attributes(z)
+```
+
+If the levels change, then we need to adjust our integer vector to have 9
+integer values.
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Consider the vectors `x` and `y` below.
+
+```{r}
+x <- letters[1:5]
+y <- list(i = 1:5, j = -3:3, k = rep(0, 4))
+```
+
+What is difference between subsetting with `[` and `[[` using integers? Try
+various indices.
+
+## Solution
+
+Let's look at atomic vectors first.
+
+```{r error=TRUE}
+x[[4]]
+x[4]
+
+x[[1:3]]
+x[1:3]
+```
+
+Subsetting with a vector of length one appears to be the same using
+`[` versus `[[`. We cannot use `[[` and subset with a vector of length greater
+than one.
+
+Doing the same for `y` yields
+
+```{r error=TRUE}
+y[[2]]
+y[2]
+
+y[[1:2]]
+y[1:2]
+
+y[[1:3]]
+y[1:3]
+```
+
+We see similar results for the generic vector `y`. We still should not use
+`[[` when subsetting with a vector of length greater than one. The result of
+`y[[1:2]]` seems to work, but it is not doing what you think. That code 
+is equivalent to `y[[1]][2]`.
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Consider the atomic vector `x`.
+
+```{r}
+set.seed(73961)
+x <- sample(1:100, size = 100, replace = TRUE)
+x
+```
+
+Use subsetting to
+
+1. select every third value from `x` beginning at position 6;
+
+2. remove all values with an odd index;
+
+3. remove all numbers divisible by 3 or 5 and replace them with 0.
+
+## Solution
+
+Recall that `x` is
+
+```{r echo=FALSE}
+x
+```
+
+
+#### Part 1
+
+```{r}
+x[seq(6, length(x), by = 3)]
+```
+
+#### Part 2
+
+```{r}
+x[-seq(1, length(x), 2)]
+```
+
+#### Part 3
+
+```{r}
+x[!(x %% 3) | !(x %% 5)] <- 0
+x
+```
+
+# Exercise 5 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Consider the list given below.
+
+```{r}
+x <- jsonlite::fromJSON('{
+  "id" : "8671703e-aab7-47a8-818e-a83a91278658",
+  "index" : 1,
+  "period" : 1,
+  "timestamp" : "00:00:00.000",
+  "minute" : 0,
+  "second" : 0,
+  "type" : {
+    "id" : 35,
+    "name" : "Starting XI"
+  },
+  "possession" : 1,
+  "possession_team" : {
+    "id" : 746,
+    "name" : "Manchester City WFC"
+  }}')
+
+str(x)
+```
+
+1. Subset `x` to obtain the `period`, `minute`, and `second` as a list.
+
+2. Subset `x` to obtain the `possession_team` `name` as a character vector.
+
+3. Subset `x` to obtain a list with `type` as the first component of the list.
+
+## Solution
+
+#### Part 1
+
+```{r}
+x[c("period", "minute", "second")]
+```
+
+#### Part 2
+
+```{r}
+x$possession_team$name
+```
+
+#### Part 3
+
+```{r}
+x["type"]
+```
+
