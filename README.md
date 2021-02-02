@@ -8,7 +8,7 @@ All exercises along with their solutions.
 | Vectors and functions              | :white_check_mark:      |
 | Shell and version control          | :white_check_mark:      |
 | Data structures and subsetting     | :white_check_mark:      |
-| Object-oriented programming        |                         |
+| Object-oriented programming        | :white_check_mark:      |
 | Data manipulation: dplyr & tidyr   |                         |
 | Functionals                        |                         |
 | Statistical graphics with ggplot2  |                         |

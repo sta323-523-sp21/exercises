@@ -1,0 +1,86 @@
+---
+title: "Exercises: Subsetting and S3 OO system"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+1. Use function `sloop::ftype()` to see which of the following functions are
+   S3 generics: `mean`, `summary`, `print`, `sum`, `plot`, `View`, `length`, 
+   `[`.
+
+2. Choose 2 of the S3 generics you identified above. How many methods exist for
+   each? Use function `sloop::s3_methods_generic()`.
+   
+3. How many methods exist for classes `factor` and `data.frame`. 
+   Use function `sloop::s3_methods_class()`.
+   
+4. Consider a class called accounting. If a numeric vector has this class,
+   function `print()` should print the vector with a $ in front of each number
+   and display values up to two decimals. Create a method for this class.
+   
+## Solution
+
+#### Part 1
+
+```{r}
+library(sloop)
+```
+
+Checking a couple of the functions:
+
+```{r}
+ftype(mean)
+ftype(plot)
+```
+
+#### Part 2
+
+```{r}
+nrow(s3_methods_generic("mean"))
+nrow(s3_methods_generic("plot"))
+```
+
+#### Part 3
+
+```{r}
+nrow(s3_methods_class("factor"))
+nrow(s3_methods_class("data.frame"))
+```
+
+#### Part 4
+
+```{r}
+print.accounting <- function(x) {
+  print(paste0("$", format(round(x, digits = 2), nsmall = 2)), quote = FALSE)
+}
+```
+
+```{r}
+x <- 1:5
+class(x) <- "accounting"
+print(x)
+```
+
+```{r}
+y <- c(4.292, 134.1133, 50.111)
+class(y) <- "accounting"
+print(y)
+```
