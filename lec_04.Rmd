@@ -267,3 +267,38 @@ x$possession_team$name
 x["type"]
 ```
 
+# Exercise 6 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Use the built-in data frame `longley` to answer the following questions.
+
+1. Which year was the percentage of people employed relative to the population
+   highest? Return the result as a data frame.
+   
+2. The Korean war took place from 1950 - 1953. Filter the data frame so it only
+   contains data from those years.
+   
+3. Which years did the number of people in the armed forces exceed the number
+   of people unemployed? Give the result as an atomic vector.
+
+## Solution
+
+#### Part 1
+
+```{r}
+longley[which.max(longley$Employed / longley$Population), 
+        "Year", drop=FALSE]
+```
+
+#### Part 2
+
+```{r}
+longley[longley$Year %in% 1950:1953, ]
+```
+
+#### Part 3
+
+```{r}
+longley$Year[longley$Armed.Forces > longley$Unemployed]
+```
