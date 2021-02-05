@@ -1,0 +1,135 @@
+---
+title: "Exercises: Data manipulation: dplyr"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+# Data
+
+Parcel boundaries with address and revenue-related information for properties in 
+Wake County, NC. http://data-wake.opendata.arcgis.com/datasets/parcels
+
+```{r}
+wake <- read_csv("https://www2.stat.duke.edu/~sms185/data/econ/parcels.csv")
+
+wake <- clean_names(wake)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Which city has the fewest land parcels in the dataset?
+
+## Solution
+
+```{r}
+wake %>% 
+  count(city_decode) %>% 
+  arrange(n) %>% 
+  slice(1)
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create a tibble that shows the year a parcel was built and the total
+value, where all parcels are located in Apex and are more than one acre in
+area. Sort the result in ascending order by year built.
+
+## Solution
+
+```{r}
+wake %>% 
+  filter(city_decode == "APEX", calc_area > 1) %>% 
+  select(year_built, total_value_assd) %>% 
+  arrange(year_built)
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Choose a subset of five variables and 10 random rows from `wake` and save it 
+as an object named `wake_mini`. Experiment renaming variables with
+`select()` and `rename()` on `wake_mini`. What is the difference between the
+two functions?
+
+## Solution
+
+- Function `select()` only keeps the variables you mention.
+
+- Function `rename()` keeps all variables.
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Compute the mean area for each design style.
+
+## Solution
+
+```{r}
+wake %>% 
+  group_by(design_style_decode) %>% 
+  summarise(mean_area = mean(calc_area))
+```
+
+# Exercise 5 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Compute the median sale price for each year. *Hint:* `lubridate::year()`
+
+## Solution
+
+```{r}
+wake %>% 
+  filter(!is.na(sale_date)) %>% 
+  mutate(year = lubridate::year(sale_date)) %>% 
+  group_by(year) %>% 
+  summarise(median_sale_price = median(totsalprice, na.rm = TRUE))
+```
+
+# Exercise 6 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Which city with at least 1,000 parcels classified as a "Townhouse"
+had the highest proportion of parcels as "Townhouse"?
+
+## Solution
+
+```{r}
+wake %>% 
+  count(city_decode, design_style_decode) %>% 
+  group_by(city_decode) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ungroup() %>% 
+  filter(design_style_decode == "Townhouse", n >= 1000) %>% 
+  arrange(desc(prop)) %>% 
+  slice(1)
+```
+

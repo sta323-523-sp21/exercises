@@ -9,7 +9,7 @@ All exercises along with their solutions.
 | Shell and version control          | :white_check_mark:      |
 | Data structures and subsetting     | :white_check_mark:      |
 | Object-oriented programming        | :white_check_mark:      |
-| Data manipulation: dplyr & tidyr   |                         |
+| Data manipulation: dplyr           | :white_check_mark:      |
 | Functionals                        |                         |
 | Statistical graphics with ggplot2  |                         |
 | Advanced visualizations            |                         |

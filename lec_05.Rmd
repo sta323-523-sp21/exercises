@@ -1,5 +1,5 @@
 ---
-title: "Exercises: Subsetting and S3 OO system"
+title: "Exercises: S3 OO system"
 author: "Shawn Santo"
 date: ""
 output: 
