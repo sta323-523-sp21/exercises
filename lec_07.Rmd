@@ -1,0 +1,208 @@
+---
+title: "Exercises: Functionals"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(repurrrsive)
+library(jsonlite)
+library(janitor)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Using `sw_people` in package `repurrrsive`, extract the name of all 
+characters using:
+
+- a for loop,
+
+- an apply function.
+
+```{r}
+str(sw_people[[1]])
+```
+
+*Hint:* The `[` and `[[` are functions.
+
+## Solution
+
+Using a `for` loop:
+
+```{r}
+out <- character(length = length(sw_people))
+
+for (i in seq_along(sw_people)) {
+  out[i] <- sw_people[[i]]$name
+}
+```
+
+Using `sapply()`:
+
+```{r}
+s_out <- sapply(sw_people, `[[`, "name")
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Use `mtcars` and a single map or map variant to
+
+1. get the type of each variable,
+
+2. get the fourth row such that result is a character vector,
+
+3. compute the mean of each variable, and
+
+4. compute the mean and median for each variable such that the result is a
+   data frame with the mean values in row 1 and the median values in row 2.
+   
+## Solution
+
+The solutions to 1, 2, 3, 4 are given below by each line of code, respectively.
+
+```{r}
+map_chr(mtcars, typeof)
+map_chr(mtcars, 4)
+map_dbl(mtcars, mean)
+map_df(mtcars, ~ c(mean(.), median(.)))
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Use a map function and your `mh_distance()` function from Homework 01
+to iterate over both vectors `s` and `w` below.
+```{r}
+s <- c(26, 50123, 456.12, 8, 0)
+w <- c(22, 50000, 451.00, 88, 0)
+```
+
+## Solutions
+
+```{r}
+mh_distance <- function(x, y) {
+  # check for correct modes
+  disallow_modes <- c("complex", "raw")
+  
+  if (mode(x) != mode(y) || any(c(mode(x), mode(y)) %in% disallow_modes)) {
+    warning("x and y are not both logical, numeric, or character")
+    return(-1)
+  }
+  
+  # check not NA, NaN, Inf, -Inf
+  if (any(c(is.na(c(x, y)), is.infinite(c(x, y))))) {
+    warning("x or y cannot be NA, NaN, Inf, or -Inf")
+    return(-1)
+  }
+  
+  # check not decimal
+  # if logical or numeric, convert to character
+  if (!is.character(x)) {
+    x <- abs(as.numeric(x))
+    y <- abs(as.numeric(y))
+    
+    if (any(c(x, y) %/% 1 != c(x, y))) {
+      warning("x or y cannot contain decimal values")
+      return(-1)
+    }
+    
+    x <- as.character(x)
+    y <- as.character(y)
+  }
+  
+  # check same number of digits or letters
+  # x and y are both of type character at this step
+  if (nchar(x) != nchar(y)) {
+    warning("x and y do not have the same number of digits or letters")
+    return(-1)
+  }
+  
+  # parse at each letter or number
+  x_split <- unlist(strsplit(x, split = ""))
+  y_split <- unlist(strsplit(y, split = ""))
+  
+  return(sum(x_split != y_split))
+}
+```
+
+```{r}
+s <- c(26, 50123, 456.12, 8, 0)
+w <- c(22, 50000, 451.00, 88, 0)
+
+map2_dbl(s, w, ~ suppressWarnings(mh_distance(x = .x, y = .y)))
+```
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+Consider the object `senators` below.
+
+```{r message=FALSE, warning=FALSE}
+json_file <- "https://www.govtrack.us/api/v2/role?current=true&role_type=senator"
+senators <- read_json(json_file)
+```
+
+## Problem
+
+Use one of the `map_*()` variants to get
+
+1. the name of each senator as a character vector (preview given below),
+
+```{r echo=FALSE}
+map_chr(senators$objects, list("person", "name"))[1:5]
+```
+
+2. the name of each senator as a list (preview given below),
+
+```{r echo=FALSE}
+map(senators$objects, list("person", "name"))[1:3]
+```
+
+3. the description and party of each senator as a data frame 
+  (preview given below)
+  
+```{r echo=FALSE}
+map_df(senators$objects, `[`, c("description", "party")) %>% 
+  slice(1:4)
+```
+
+## Solution
+
+#### Part 1
+
+```{r eval=FALSE}
+map_chr(senators$objects, list("person", "name"))
+```
+
+#### Part 2
+
+```{r eval=FALSE}
+map(senators$objects, list("person", "name"))
+```
+
+#### Part 3
+
+```{r eval=FALSE}
+map_df(senators$objects, `[`, c("description", "party"))
+```
