@@ -11,7 +11,7 @@ All exercises along with their solutions.
 | Object-oriented programming        | :white_check_mark:      |
 | Data manipulation: dplyr           | :white_check_mark:      |
 | Functionals                        | :white_check_mark:      |
-| Statistical graphics with ggplot2  |                         |
+| Statistical graphics with ggplot2  | :white_check_mark:      |
 | Advanced visualizations            |                         |
 | String manipulation and regexes    |                         |
 | Spatial data visualization         |                         |
