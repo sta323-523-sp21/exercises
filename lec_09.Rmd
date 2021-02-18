@@ -1,0 +1,204 @@
+---
+title: "Exercises: Advanced Visualization Techniques"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(patchwork)
+```
+
+# Data
+
+**Flint water**
+
+```{r message=FALSE}
+url <- str_c("http://www2.stat.duke.edu/~sms185/",
+             "data/health/flint.csv")
+flint <- read_csv(url)
+flint
+```
+
+Each row represents a home in Flint, Michigan. Water lead contaminant
+value were recorded at three times as represented by `draw1`, `draw2`, and
+`draw3`.
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create a set of visualizations based on tibble object `flint`. Use patchwork
+to combine these in a single plot window.
+
+## Solution
+
+```{r fig.align='center', fig.height=9, fig.width=10}
+# reshape the data
+flint_long <- flint %>% 
+  pivot_longer(cols = draw1:draw3, names_to = "draw", values_to = "pb_level")
+
+# create a time plot
+p1 <- flint_long %>% 
+  filter(zip == 48507, pb_level < 75) %>% 
+  ggplot(mapping = aes(x = draw, y = pb_level, group = id)) +
+  geom_point() +
+  geom_line(color = "grey60") +
+  scale_x_discrete(labels = c("Draw 1", "Draw 2", "Draw 3")) +
+  labs(y = "Lead level (ppb)", x = "") +
+  theme_minimal(base_size = 16)
+
+# create a boxplot
+p2 <- flint_long %>% 
+  filter(zip == 48507, pb_level < 75) %>% 
+  ggplot(mapping = aes(x = draw, y = pb_level)) +
+  geom_boxplot() +
+  scale_x_discrete(labels = c("Draw 1", "Draw 2", "Draw 3")) +
+  labs(y = "", x = "") +
+  theme_minimal(base_size = 16)
+
+# create a density plot
+p3 <- flint_long %>% 
+  filter(zip == 48507, pb_level < 75) %>% 
+  ggplot(mapping = aes(x = pb_level, fill = draw)) +
+  geom_density(alpha = .3) +
+  theme_minimal(base_size = 16) +
+  labs(x = "Lead level (ppb)", y = "Density", fill = "Draw time (seconds)") +
+  scale_fill_discrete(labels = c("0", "45", "120")) +
+  theme(legend.position = "bottom") 
+
+# patchwork to bring everything together
+(p1 + p2) / p3
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create a new stat called `stat_outlier_encircle()` that encircles outliers in 
+a set of bivariate data. Define an outlier as when both values in a data pair
+have a z-score greater than three in absolute value. Check out
+https://ggplot2.tidyverse.org/articles/extending-ggplot2.html.
+
+Some examples of `stat_outlier_encircle()` in action are given below.
+
+```{r echo=FALSE}
+# create ggproto object
+StatOutlier <- ggproto("StatOutlier", Stat,
+                       compute_group = function(data, scales) {
+                          xvar <- data$x
+                          yvar <- data$y
+                          
+                          stand <- function(x) {
+                            (x - mean(x)) / sd(x)
+                          }
+                          data[abs(stand(xvar)) > 3 & abs(stand(yvar)) > 3, , drop = FALSE]
+                       },
+                       
+                       required_aes = c("x", "y")
+                       
+                       )
+
+# create stat function
+stat_outlier_encircle <- function(mapping = NULL, data = NULL, geom = "point",
+                         position = "identity", na.rm = FALSE, show.legend = NA, 
+                         inherit.aes = TRUE,
+                         shape = 21, size = 5, color = "red",
+                         alpha = 1, ...) {
+  layer(
+    stat = StatOutlier, data = data, mapping = mapping, geom = geom, 
+    position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+    params = list(color = color, shape = shape, size = size, alpha = alpha, 
+                  na.rm = na.rm, ...)
+  )
+}
+```
+
+<br/>
+
+A typical scatter plot with `ggplot()` and `geom_point()`:
+
+```{r}
+set.seed(09567899)
+data_norm <- tibble(x = c(rnorm(95, 100, 5), rnorm(5, 70, 5)), 
+                    y = c(rnorm(95, 100, 5), rnorm(5, 70, 5)))
+
+ggplot(data_norm, mapping = aes(x = x, y = y)) +
+  geom_point() +
+  theme_minimal()
+```
+
+An added layer that marks outliers:
+
+```{r}
+ggplot(data_norm, mapping = aes(x = x, y = y)) +
+  geom_point() +
+  stat_outlier_encircle() +
+  theme_minimal()
+```
+
+```{r}
+ggplot(data_norm, mapping = aes(x = x, y = y)) +
+  geom_point() +
+  stat_outlier_encircle(color = "purple", size = 14) +
+  theme_minimal()
+```
+
+```{r}
+ggplot(data_norm, mapping = aes(x = x, y = y)) +
+  geom_point() +
+  stat_outlier_encircle(color = "purple", size = 14, 
+                        fill = "lightblue", alpha = .4) +
+  theme_minimal()
+```
+
+## Solution
+
+```{r}
+# create ggproto object
+StatOutlier <- ggproto("StatOutlier", Stat,
+                       compute_group = function(data, scales) {
+                          xvar <- data$x
+                          yvar <- data$y
+                          
+                          stand <- function(x) {
+                            (x - mean(x)) / sd(x)
+                          }
+                          data[abs(stand(xvar)) > 3 & abs(stand(yvar)) > 3, , drop = FALSE]
+                       },
+                       
+                       required_aes = c("x", "y")
+                       
+                       )
+
+# create stat function
+stat_outlier_encircle <- function(mapping = NULL, data = NULL, geom = "point",
+                         position = "identity", na.rm = FALSE, show.legend = NA, 
+                         inherit.aes = TRUE,
+                         shape = 21, size = 5, color = "red",
+                         alpha = 1, ...) {
+  layer(
+    stat = StatOutlier, data = data, mapping = mapping, geom = geom, 
+    position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+    params = list(color = color, shape = shape, size = size, alpha = alpha, 
+                  na.rm = na.rm, ...)
+  )
+}
+```
+

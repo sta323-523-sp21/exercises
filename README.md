@@ -12,8 +12,8 @@ All exercises along with their solutions.
 | Data manipulation: dplyr           | :white_check_mark:      |
 | Functionals                        | :white_check_mark:      |
 | Statistical graphics with ggplot2  | :white_check_mark:      |
-| Advanced visualizations            |                         |
-| String manipulation and regexes    |                         |
+| Advanced visualizations            | :white_check_mark:      |
+| String manipulation and regexes    | :white_check_mark:      |
 | Spatial data visualization         |                         |
 | Spatial data wrangling             |                         |
 | Web scraping part I                |                         |

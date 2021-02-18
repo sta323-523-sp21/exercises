@@ -1,0 +1,154 @@
+---
+title: "Exercises: String manipulation and regexes"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+1. What `pattern` do you need to match a literal `\` in the string below?
+    ```{r eval=FALSE}
+    str_view_all("find the \\ in this string", pattern = )
+    ```
+2. Can you extract the arithmetic operations in this string?
+    ```{r eval=FALSE}
+    str_extract_all("4 + 3 ^ 2 - 10", pattern = )
+    ```
+3. What `pattern` do you need to match every character and `?` combination?
+    ```{r eval=FALSE}
+    str_view_all("to get help? in r you can use a ?, maybe this
+                 works in other languages?", pattern = )
+    ```
+
+## Solution
+
+```{r}
+str_view_all("find the \\ in this string", pattern = "\\\\")
+
+str_extract_all("4 + 3 ^ 2 - 10", pattern = "[\\+\\^\\-]")
+
+str_view_all("to get help? in r you can use a ?, maybe this
+                 works in other languages?", pattern = ".\\?")
+```
+
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Write a regular expression to match a
+
+1. social security number of the form ###-##-####,
+
+2. phone number of the form (###) ###-####,
+
+3. license plate of the form AAA ####.
+
+Test your regexs on some examples with `str_detect()` or `str_view()`.
+
+## Solution
+
+```{r}
+x <- "My info is as follows. Cell: (432)-431-1512. Social security: 432-11-1990"
+y <- "Vehicle info: AEF 2348"
+
+# not the most efficient
+str_view_all(x, "[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]")
+
+str_view_all(x, "\\([0-9][0-9][0-9]\\)-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]")
+
+str_view_all(y, "[A-Z][A-Z][A-Z] [0-9][0-9][0-9][0-9]")
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+1. Write a regular expression that will extract all phone numbers contained 
+   in the vector above.
+
+2. Once that works use groups to extracts the area code separately from the rest
+   of the phone number.
+
+```{r}
+text <- c(
+  "apple", 
+  "219 733 8965", 
+  "329-293-8753",
+  "Work: (579) 499-7527; Home: (543) 355 3679"
+)
+```
+
+## Solution
+
+```{r}
+str_extract_all(text, "\\(?\\d{3}\\)?[ -]\\d{3}[ -]\\d{4}")
+
+str_match_all(text, "\\(?(\\d{3})\\)?[ -]\\d{3}[ -]\\d{4}") %>% 
+  purrr::map(~ .[, 2]) %>% 
+  unlist()
+```
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Extract every word "fruit" or "flies" from `phrases`.
+
+```{r}
+phrases <-  c("time flies when you're having fun in 521",
+              "fruit flies when you throw it",
+              "a fruit fly is a beautiful creature",
+              "how do you spell fruitfly?")
+```
+
+## Solution
+
+```{r}
+phrases %>% 
+  str_extract_all(pattern = "fruit|flies")
+```
+
+# Exercise 5 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Extract the numeric values from the tongue twister below.
+
+```{r}
+twister <- paste("Something in a 30 acre thermal thicket of thorns and",
+                 "thistles thumped and thundered threatening the 3-D",
+                 "thoughts of Matthew the thug - although, theatrically,",
+                 "it was only the 13000 thistles and thorns through the",
+                 "underneath of his thigh that the 30 year old thug",
+                 "thought of that morning.", sep = " ")
+```
+
+## Solution
+
+```{r}
+twister %>% 
+  str_extract_all(pattern = "[:digit:]+")
+```
