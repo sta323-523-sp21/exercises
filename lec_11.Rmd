@@ -1,0 +1,149 @@
+---
+title: "Exercises: Spatial data visualization with sf"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(sf)
+library(tidyverse)
+```
+
+# Data
+
+## NC counties
+
+```{r}
+nc <- st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Use `ggplot` to create a choropleth map for the proportion of sudden infant 
+deaths, for the period of July 1, 1974 to June 30, 1979.
+
+```{r echo=FALSE}
+nc %>% 
+  select(BIR74, SID74) %>% 
+  mutate(SID74_prop = SID74 / (BIR74 + SID74)) %>% 
+  ggplot() +
+  geom_sf(aes(fill = SID74_prop)) +
+  scale_fill_gradient(low = "#fff7f3", high = "#49006a") +
+  labs(title = "July 1, 1974 to June 30, 1979", 
+       fill  = "",
+       subtitle = "Proportion of SID by county") +
+  theme_void() +
+  theme(plot.margin = margin(0, 1, 0, 1, "cm"))
+```
+
+
+## Solution
+
+```{r}
+nc %>% 
+  select(BIR74, SID74) %>% 
+  mutate(SID74_prop = SID74 / (BIR74 + SID74)) %>% 
+  ggplot() +
+  geom_sf(aes(fill = SID74_prop)) +
+  scale_fill_gradient(low = "#fff7f3", high = "#49006a") +
+  labs(title = "July 1, 1974 to June 30, 1979", 
+       fill  = "",
+       subtitle = "Proportion of SID by county") +
+  theme_void() +
+  theme(plot.margin = margin(0, 1, 0, 1, "cm"))
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Recreate John Snow's cholera map showing the cholera death locations and the
+water pump locations.
+
+Download the data (you should have a directory named `data/`):
+
+```{r eval=FALSE}
+download.file("http://rtwilson.com/downloads/SnowGIS_SHP.zip",
+              destfile = "data/john_snow.zip")
+unzip("data/john_snow.zip", exdir = "data/")
+```
+
+Read in the data:
+
+```{r}
+cholera <- st_read("data/SnowGIS_SHP/Cholera_Deaths.shp", quiet = TRUE)
+pumps <- st_read("data/SnowGIS_SHP/Pumps.shp", quiet = TRUE)
+```
+
+Before you start, check that both `sf` objects have the same CRS.
+
+<br/>
+
+```{r echo=FALSE}
+js_raster <- raster::raster("data/SnowGIS_SHP/OSMap_Grayscale.tif")
+```
+
+```{r echo=FALSE, fig.width=6, fig.height=6}
+RStoolbox::ggR(js_raster) +
+  geom_sf(data = cholera, aes(size = Count), color = "red", alpha = .5) + 
+  geom_sf(data = pumps, color = "blue", size = 3) + 
+  labs(size = "Deaths", title = "London Cholera Outbreak",
+       caption = "Water pumps colored in blue") +
+  theme_void() +
+  theme(legend.position  = "bottom",
+        plot.title       = element_text(size   = 28, 
+                                        family = "Impact"),
+        legend.text      = element_text(size   = 14, 
+                                        family = "Comic Sans MS"),
+        legend.title     = element_text(size   = 16, 
+                                        family = "Comic Sans MS"),
+        plot.caption     = element_text(size   = 10, 
+                                        family = "Comic Sans MS"))
+```
+
+## Solution
+
+Here is a way to overlay the points on the raster object.
+
+```{r eval=FALSE}
+js_raster <- raster::raster("data/SnowGIS_SHP/OSMap_Grayscale.tif")
+```
+
+```{r eval=FALSE}
+RStoolbox::ggR(js_raster) +
+  geom_sf(data = cholera, aes(size = Count), color = "red", alpha = .5) + 
+  geom_sf(data = pumps, color = "blue", size = 3) + 
+  labs(size = "Deaths", title = "London Cholera Outbreak",
+       caption = "Water pumps colored in blue") +
+  theme_void() +
+  theme(legend.position  = "bottom",
+        plot.title       = element_text(size   = 28, 
+                                        family = "Impact"),
+        legend.text      = element_text(size   = 14, 
+                                        family = "Comic Sans MS"),
+        legend.title     = element_text(size   = 16, 
+                                        family = "Comic Sans MS"),
+        plot.caption     = element_text(size   = 10, 
+                                        family = "Comic Sans MS"))
+```
+
+Leaflet is a challenge here because CRS are not aligned. R's `plot()` functions
+should work too.

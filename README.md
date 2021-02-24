@@ -14,7 +14,7 @@ All exercises along with their solutions.
 | Statistical graphics with ggplot2  | :white_check_mark:      |
 | Advanced visualizations            | :white_check_mark:      |
 | String manipulation and regexes    | :white_check_mark:      |
-| Spatial data visualization         |                         |
+| Spatial data visualization         | :white_check_mark:      |
 | Spatial data wrangling             |                         |
 | Web scraping part I                |                         |
 | Web scraping part II               |                         |
