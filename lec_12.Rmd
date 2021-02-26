@@ -1,0 +1,234 @@
+---
+title: "Exercises: Spatial data wrangling with sf"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(sf)
+library(janitor)
+library(tidygeocoder)
+```
+
+# Data
+
+## Access
+
+## Access data
+
+Create a folder `data/`.
+
+NC PMTW Streams:
+
+```{r eval=FALSE}
+download.file(paste0("https://opendata.arcgis.com/datasets/", 
+                    "0cc135e6c6244c9e9646b45ee3cb6c1e_0.zip", 
+                    "?outSR=%7B%22latestWkid%22%3A3857%2C%22",
+                    "wkid%22%3A102100%7D"),
+              destfile = "data/pmtw.zip")
+
+unzip("data/pmtw.zip", exdir = "data/")
+file.remove("data/pmtw.zip")
+```
+
+NC Public Schools:
+
+```{r eval=FALSE}
+download.file(paste0("https://opendata.arcgis.com/datasets/", 
+                    "dea6ff0e8b4743a0ba361e13a85a4c70_3.zip", 
+                    "?outSR=%7B%22latestWkid%22%3A32119%2C%22",
+                    "wkid%22%3A32119%7D"),
+              destfile = "data/schools.zip")
+
+unzip("data/schools.zip", exdir = "data/")
+file.remove("data/schools.zip")
+```
+
+## Read
+
+Read in the shapefiles
+
+```{r}
+nc_counties <- st_read(system.file("shape/nc.shp", package = "sf"), 
+                       quiet = T) %>% 
+  clean_names() %>% 
+  select(name, area)
+```
+
+```{r}
+nc_pmtw <- st_read("data/PMTW_Streams_2020.shp", quiet = T) %>%
+  clean_names() %>% 
+  select(name = displ_name, designation = first_wrc, length = shape_len)
+```
+
+```{r}
+nc_schools <- st_read("data/Public_Schools.shp", quiet = T) %>% 
+  clean_names()
+```
+
+## Align CRS
+
+```{r}
+nc_counties <- st_transform(nc_counties, crs = st_crs(nc_schools))
+nc_pmtw <- st_transform(nc_pmtw, crs = st_crs(nc_schools))
+```
+
+
+```{r}
+st_crs(nc_counties)[1]
+st_crs(nc_pmtw)[1]
+st_crs(nc_schools)[1]
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Use `st_intersects()` and `st_contains()` to plot all the public schools in
+Durham and the counties that neighbor Durham.
+
+<br/>
+
+```{r echo=FALSE, fig.height=5, fig.width=5}
+durham <- nc_counties %>% 
+  filter(str_detect(name, "^Durham"))
+
+durham_counties <- durham %>% 
+  st_intersects(nc_counties, sparse = FALSE) %>% 
+  filter(.data = nc_counties, .)
+
+durham_counties %>% 
+  st_contains(nc_schools, sparse = FALSE) %>%
+  apply(MARGIN = 2, FUN = any) %>% 
+  filter(.data = nc_schools, .) %>% 
+  ggplot() +
+  geom_sf(color = "blue", alpha = .5, size = 2) +
+  geom_sf(data = durham_counties, alpha = 0) +
+  labs(title = "Durham Area Public Schools") +
+  theme_void()
+```
+
+## Solution
+
+```{r fig.height=5, fig.width=5}
+durham <- nc_counties %>% 
+  filter(str_detect(name, "^Durham"))
+
+durham_counties <- durham %>% 
+  st_intersects(nc_counties, sparse = FALSE) %>% 
+  filter(.data = nc_counties, .)
+
+durham_counties %>% 
+  st_contains(nc_schools, sparse = FALSE) %>%
+  apply(MARGIN = 2, FUN = any) %>% 
+  filter(.data = nc_schools, .) %>% 
+  ggplot() +
+  geom_sf(color = "blue", alpha = .5, size = 2) +
+  geom_sf(data = durham_counties, alpha = 0) +
+  labs(title = "Durham Area Public Schools") +
+  theme_void()
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Use `st_buffer()` to place a 500 meter buffer around the trout waters in
+Ashe county North Carolina.
+
+```{r echo=FALSE, fig.height=7, fig.width=7}
+ashe <- nc_counties %>% 
+  filter(name == "Ashe")
+
+ashe_trout <- ashe %>% 
+  st_contains(nc_pmtw, sparse = FALSE) %>% 
+  filter(.data = nc_pmtw, .)
+
+ggplot(ashe) +
+  geom_sf(alpha = 0.3) +
+  geom_sf(data = st_buffer(ashe_trout, dist = 500), color = "pink", 
+          alpha = 0.5) +
+  geom_sf(data = ashe_trout, color = "blue") +
+  labs(title = "Ashe county PMTW") +
+  theme_void()
+```
+
+## Solution
+
+```{r fig.height=7, fig.width=7}
+ashe <- nc_counties %>% 
+  filter(name == "Ashe")
+
+ashe_trout <- ashe %>% 
+  st_contains(nc_pmtw, sparse = FALSE) %>% 
+  filter(.data = nc_pmtw, .)
+
+ggplot(ashe) +
+  geom_sf(alpha = 0.3) +
+  geom_sf(data = st_buffer(ashe_trout, dist = 500), color = "pink", 
+          alpha = 0.5) +
+  geom_sf(data = ashe_trout, color = "blue") +
+  labs(title = "Ashe county PMTW") +
+  theme_void()
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Check the accuracy of the geocoding where `method = census`. Only use a sample
+of the schools. You can gauge the accuracy visually or by computing distances
+with `st_distance()`. Don't forget to align the CRS!
+
+## Solution
+
+Create a new `sf` object based on the geocode results. We'll take a sample of
+10 schools.
+
+```{r}
+set.seed(3244)
+
+nc_schools_sample <- nc_schools %>% 
+  slice_sample(n = 10)
+
+nc_schools_geocode <- nc_schools_sample %>% 
+  st_drop_geometry() %>% 
+  select(phys_addr, phys_city, phys_zip) %>% 
+  mutate(state = "NC") %>% 
+  geocode(street = phys_addr, city = phys_city, state = state, postalcode = phys_zip,
+          method = "census") %>%
+  filter(!is.na(lat)) %>% 
+  st_as_sf(coords = c("long", "lat"), crs = "NAD27") %>% 
+  st_transform(crs = st_crs(nc_schools))
+```
+
+Visualize how close these are.
+
+```{r}
+ggplot(nc_schools_sample) + 
+  geom_sf(color = "blue", alpha = .8, size = 5) + 
+  geom_sf(data = nc_schools_geocode, color = "red", 
+          shape = 21, size = 10) +
+  geom_sf(data = nc_counties, alpha = 0) +
+  theme_bw()
+```
+
+
+

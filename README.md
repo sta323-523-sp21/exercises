@@ -15,7 +15,7 @@ All exercises along with their solutions.
 | Advanced visualizations            | :white_check_mark:      |
 | String manipulation and regexes    | :white_check_mark:      |
 | Spatial data visualization         | :white_check_mark:      |
-| Spatial data wrangling             |                         |
+| Spatial data wrangling             | :white_check_mark:      |
 | Web scraping part I                |                         |
 | Web scraping part II               |                         |
 | Web APIs                           |                         |
