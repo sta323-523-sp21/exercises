@@ -1,0 +1,297 @@
+---
+title: "Exercises: Web scraping part I"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(rvest)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Go to http://books.toscrape.com/catalogue/page-1.html and scrape the first 
+five pages of data on books with regards to their
+
+1. title
+2. price
+3. star rating
+4. availability
+
+Organize your results in a neatly formatted tibble similar to below.
+
+```{r echo=FALSE}
+get_books <- function(page) {
+  
+  base_url <- "http://books.toscrape.com/catalogue/page-"
+  url <- str_c(base_url, page, ".html")
+  
+  books_html <- read_html(url)
+  
+  prices <- books_html %>% 
+    html_nodes(css = ".price_color") %>% 
+    html_text()
+  
+  titles <- books_html %>% 
+    html_nodes(css = ".product_pod a") %>% 
+    html_attr("title") %>% 
+    .[!is.na(.)]
+
+  ratings <- books_html %>% 
+    html_nodes(css = ".star-rating") %>% 
+    html_attr(name = "class") %>% 
+    str_remove(pattern = "star-rating ")
+  
+  availabilities <- books_html %>% 
+    html_nodes(css = ".availability") %>% 
+    html_text() %>% 
+    str_trim()
+  
+  books_df <- tibble(
+    title     = titles,
+    price     = prices,
+    rating    = ratings,
+    available = availabilities
+  )
+  
+  return(books_df)
+}
+```
+
+```{r echo=FALSE}
+# iterate across pages
+pages <- 1:5
+books <- map_df(pages, get_books)
+books
+```
+
+## Solution
+
+```{r}
+get_books <- function(page) {
+  
+  base_url <- "http://books.toscrape.com/catalogue/page-"
+  url <- str_c(base_url, page, ".html")
+  
+  books_html <- read_html(url)
+  
+  prices <- books_html %>% 
+    html_nodes(css = ".price_color") %>% 
+    html_text()
+  
+  titles <- books_html %>% 
+    html_nodes(css = ".product_pod a") %>% 
+    html_attr("title") %>% 
+    .[!is.na(.)]
+
+  ratings <- books_html %>% 
+    html_nodes(css = ".star-rating") %>% 
+    html_attr(name = "class") %>% 
+    str_remove(pattern = "star-rating ")
+  
+  availabilities <- books_html %>% 
+    html_nodes(css = ".availability") %>% 
+    html_text() %>% 
+    str_trim()
+  
+  books_df <- tibble(
+    title     = titles,
+    price     = prices,
+    rating    = ratings,
+    available = availabilities
+  )
+  
+  return(books_df)
+}
+```
+
+```{r}
+# iterate across pages
+pages <- 1:5
+books <- map_df(pages, get_books)
+books
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Scrape the first page of books from each genre in the side bar on the website
+http://books.toscrape.com/. Scape the same information as before and include
+the genre.
+
+```{r echo=FALSE}
+base_url <- "http://books.toscrape.com/"
+books_main_html <- read_html("http://books.toscrape.com/index.html")
+
+genre_urls <- books_main_html %>% 
+  html_nodes(".nav-list ul a") %>%
+  html_attr(name = "href") %>% 
+  str_c(base_url, .)
+
+genres <- books_main_html %>% 
+  html_nodes(".nav-list ul a") %>%
+  html_text() %>% 
+  str_trim()
+```
+
+Modify our function from Exercise 1 to scrape the books by genre.
+
+```{r echo=FALSE}
+get_books_by_genre <- function(url, genre) {
+  
+  books_html <- read_html(url)
+  
+  prices <- books_html %>% 
+    html_nodes(css = ".price_color") %>% 
+    html_text()
+  
+  titles <- books_html %>% 
+    html_nodes(css = ".product_pod a") %>% 
+    html_attr("title") %>% 
+    .[!is.na(.)]
+
+  ratings <- books_html %>% 
+    html_nodes(css = ".star-rating") %>% 
+    html_attr(name = "class") %>% 
+    str_remove(pattern = "star-rating ")
+  
+  availabilities <- books_html %>% 
+    html_nodes(css = ".availability") %>% 
+    html_text() %>% 
+    str_trim()
+  
+  books_df <- tibble(
+    title     = titles,
+    price     = prices,
+    rating    = ratings,
+    available = availabilities,
+    genre     = genre
+  )
+  
+  return(books_df)
+}
+```
+
+```{r echo=FALSE}
+map2_df(genre_urls, genres, get_books_by_genre)
+```
+
+## Solution
+
+First, grab all the genre URLs.
+
+```{r}
+base_url <- "http://books.toscrape.com/"
+books_main_html <- read_html("http://books.toscrape.com/index.html")
+
+genre_urls <- books_main_html %>% 
+  html_nodes(".nav-list ul a") %>%
+  html_attr(name = "href") %>% 
+  str_c(base_url, .)
+
+genres <- books_main_html %>% 
+  html_nodes(".nav-list ul a") %>%
+  html_text() %>% 
+  str_trim()
+```
+
+Modify our function from Exercise 1 to scrape the books by genre.
+
+```{r}
+get_books_by_genre <- function(url, genre) {
+  
+  books_html <- read_html(url)
+  
+  prices <- books_html %>% 
+    html_nodes(css = ".price_color") %>% 
+    html_text()
+  
+  titles <- books_html %>% 
+    html_nodes(css = ".product_pod a") %>% 
+    html_attr("title") %>% 
+    .[!is.na(.)]
+
+  ratings <- books_html %>% 
+    html_nodes(css = ".star-rating") %>% 
+    html_attr(name = "class") %>% 
+    str_remove(pattern = "star-rating ")
+  
+  availabilities <- books_html %>% 
+    html_nodes(css = ".availability") %>% 
+    html_text() %>% 
+    str_trim()
+  
+  books_df <- tibble(
+    title     = titles,
+    price     = prices,
+    rating    = ratings,
+    available = availabilities,
+    genre     = genre
+  )
+  
+  return(books_df)
+}
+```
+
+```{r}
+map2_df(genre_urls, genres, get_books_by_genre)
+```
+
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+HTML tags are composed of three things: an opening tag, content and ending tag.
+They each have different properties. Identify what the following tags are used
+for. Only the opening tag is shown.
+
+|    Tag    | Description |
+|:---------:|-------------|
+|   `<b>`   |             |
+|   `<i>`   |             |
+|   `<h3>`  |             |
+| `<table>` |             |
+|   `<tr>`  |             |
+|   `<th>`  |             |
+|   `<td>`  |             |
+|  `<img>`  |             |
+|   `<p>`   |             |
+
+## Solution
+
+HTML tags are composed of three things: an opening tag, content and ending tag.
+They each have different properties. Identify what the following tags are used
+for. Only the opening tag is shown.
+
+|    Tag    | Description         |
+|:---------:|---------------------|
+|   `<b>`   | bold                |
+|   `<i>`   | italics             |
+|   `<h3>`  | level 3 header      |
+| `<table>` | table               |
+|   `<tr>`  | row in a table      |
+|   `<th>`  | header in a table   |
+|   `<td>`  | cell in a table     |
+|  `<img>`  | image               |
+|   `<p>`   | paragraph           |
