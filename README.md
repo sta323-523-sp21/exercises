@@ -17,7 +17,7 @@ All exercises along with their solutions.
 | Spatial data visualization         | :white_check_mark:      |
 | Spatial data wrangling             | :white_check_mark:      |
 | Web scraping part I                | :white_check_mark:      |
-| Web scraping part II               |                         |
+| Web scraping part II               | :white_check_mark:      |
 | Web APIs                           |                         |
 | make                               |                         |
 | Shiny part I                       |                         |

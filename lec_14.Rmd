@@ -1,0 +1,142 @@
+---
+title: "Exercises: Web scraping part II"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      eval = FALSE, comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(jsonlite)
+library(RSelenium)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+https://toscrape.com has a website on quotes for scraping. This 
+site-scraping-sandbox provides various endpoints that present different 
+scraping challenges. Try and scrape the first 50 quotes and authors at
+http://quotes.toscrape.com/scroll.
+
+First, try using the typical approach with `rvest` to understand what is 
+going on.
+
+## Solution
+
+```{r}
+get_quotes_scroll <- function(page) {
+  base_url <- "http://quotes.toscrape.com/api/quotes?page="
+  url <- str_c(base_url, page)
+  
+  x <- read_json(url)
+  x$quotes
+}
+
+quotes <- map(1:5, get_quotes_scroll)
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+https://toscrape.com has a website on quotes for scraping. This 
+site-scraping-sandbox provides various endpoints that present different 
+scraping challenges. Try and scrape the first 50 quotes and authors at
+http://quotes.toscrape.com/js/.
+
+First, try using the typical approach with `rvest` to understand what is 
+going on.
+
+## Solution
+
+First set-up an R Selenium driver. For me, firefox seems to work the easiest,
+but other browsers are also supported - chrome, internet explorer, and
+phantomjs.
+
+```{r set_driver}
+driver <- rsDriver(browser = "firefox")
+remote_driver <- driver$client
+```
+
+Navigate to page 1 to test that our driver works.
+
+```{r navigate}
+quotes_js_url <- "http://quotes.toscrape.com/js/"
+remote_driver$navigate(quotes_js_url)
+```
+
+Scrape the quotes and authors on page. Function `getPageSource()` will
+return a list with the HTML document as the first component.
+
+```{r scrape_page_1}
+quotes_html <- read_html(remote_driver$getPageSource()[[1]])
+
+quotes <- quotes_html %>% 
+  html_nodes(".text") %>% 
+  html_text()
+
+authors <- quotes_html %>% 
+  html_nodes(".author") %>% 
+  html_text
+```
+
+Turn the above code into a function for iterative page scraping.
+
+```{r get_quotes_fcn}
+get_quotes <- function(page) {
+  base_url <- quotes_js_url
+  url <- str_c(base_url, "page/", page, "/")
+  remote_driver$navigate(url)
+  
+  quotes_html <- read_html(remote_driver$getPageSource()[[1]])
+
+  quotes <- quotes_html %>% 
+    html_nodes(".text") %>% 
+    html_text()
+  
+  authors <- quotes_html %>% 
+    html_nodes(".author") %>% 
+    html_text
+  
+  tibble(
+    quote  = quotes,
+    author = authors
+  )
+}
+```
+
+Scrape pages 1 - 5 and create a tibble.
+
+```{r get_5_pages}
+map_df(1:5, get_quotes)
+```
+
+Close the driver down.
+
+```{r close_driver}
+netstat::free_port()
+remote_driver$close()
+rm(driver)
+rm(remote_driver)
+```
+
+
+
