@@ -1,0 +1,128 @@
+---
+title: "Exercises: Web APIs"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(jsonlite)
+library(tidyverse)
+```
+
+# Data
+
+Use the [Open Brewery API](https://www.openbrewerydb.org/) to answer the 
+following questions. You'll need to read through their documentation to 
+get an idea for how it is structured.
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+How many breweries are located in Durham, NC?
+
+## Solution
+
+```{r}
+base_url <- "https://api.openbrewerydb.org/breweries"
+
+# build query part
+query <- "?by_state=north+carolina&by_city=durham&per_page=50"
+
+read_json(str_c(base_url, query)) %>% 
+  length()
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Which city in North Carolina has the most micro breweries? How many micro
+breweries do they have?
+
+## Solution
+
+We'll use the `base_url` object created in the solution to Exercise 1.
+
+```{r}
+get_nc_brew <- function(base, page) {
+  query <- str_c("?by_state=north_carolina&by_type=micro&page=", 
+                 page, "&per_page=50")
+  fromJSON(str_c(base_url, query))
+}
+
+# iterate over 10 pages, since we don't know how many pages there are
+nc_micro <- map(1:10, get_nc_brew, base = base_url) %>% 
+  map_df(rbind) %>% 
+  as_tibble()
+
+# determine which city has the most micro breweries
+nc_micro %>% 
+  group_by(city) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  slice(1)
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+In what cities are Founders, Yuengling, and Boulevard brewed?
+
+## Solution
+
+We'll use the `base_url` object created in the solution to Exercise 1.
+
+```{r}
+brew <- c("founders", "yuengling", "boulevard")
+
+get_city_brew <- function(co) {
+  query <- str_c("?by_name=", co)
+  fromJSON(str_c(base_url, query)) %>% 
+  pull(city) %>% 
+  unique()
+}
+
+map(brew, get_city_brew) %>% 
+  set_names(brew)
+```
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Which state has the most breweries?
+
+## Solution
+
+We'll use the `base_url` object created in the solution to Exercise 1.
+
+```{r}
+get_brew <- function(page) {
+  query <- str_c("?page=", page, "&per_page=50")
+  fromJSON(str_c(base_url, query)) %>% 
+    as_tibble()
+}
+
+map_df(1:200, get_brew) %>% 
+  count(state) %>% 
+  arrange(desc(n)) %>% 
+  slice(1)
+```
