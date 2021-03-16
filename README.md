@@ -19,7 +19,7 @@ All exercises along with their solutions.
 | Web scraping part I                | :white_check_mark:      |
 | Web scraping part II               | :white_check_mark:      |
 | Web APIs                           | :white_check_mark:      |
-| make                               |                         |
+| make                               | :white_check_mark:      |
 | Shiny part I                       |                         |
 | Shiny part II                      |                         |
 | Databases and SQL                  |                         |

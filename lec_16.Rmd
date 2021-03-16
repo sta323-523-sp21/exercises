@@ -1,0 +1,73 @@
+---
+title: "Exercises: make"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create a `Makefile` for the R project in the 
+[learn_make](https://github.com/sta323-523-sp21/learn_make) repository
+on GitHub. The target goal should be `learn_make.html`. The below steps will
+help guide you in creating `Makefile`.
+
+1. Diagram the dependency structure on paper.
+
+2. First, create a `Makefile` that only knits the Rmd file and 
+   produces the `learn_make.html` file.
+
+3. Next, add rules for the data dependencies.
+
+4. Add phony `clean_html` and `clean_data` targets that delete the html file and
+   delete the rds files in `data/`, respectively.
+   
+5. Revise your `Makefile` with built-in variables or other useful features.
+
+## Solution
+
+If you copy this solution to your `Makefile`, be sure that tabs precede the
+recipes. If you see `Makefile: *** missing separator.  Stop.`, `make` is most
+likely letting you know that the indented lines have been made with something
+other than a tab.
+
+```make
+learn_make.html: learn_make.Rmd data/COUNTY_BOUNDARY.shp data/RMSSEG_(State_Roads).shp data/sheetz.rds
+	Rscript -e "rmarkdown::render('learn_make.Rmd')" 
+	
+data/sheetz.rds: R/parse_sheetz.R data/all_sheetz_stores.rds
+	Rscript $<
+	
+data/all_sheetz_stores.rds: R/get_sheetz.R
+	Rscript $<
+	
+data/COUNTY_BOUNDARY.shp: R/get_pa_counties.R
+	Rscript $<
+	
+data/RMSSEG_(State_Roads).shp: R/get_pa_roads.R
+	Rscript $<
+	
+clean_html:
+	rm learn_make.html
+	
+clean_data:
+	cd data; rm *
+	
+.PHONY: clean_html clean_data
+```
+
