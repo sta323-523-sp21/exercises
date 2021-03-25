@@ -1,0 +1,135 @@
+---
+title: "Exercises: Databases and SQL"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(DBI)
+library(dbplyr)
+library(dplyr)
+library(nycflights13)
+library(Lahman)
+```
+
+# Data
+
+Create an in-memory database and add `airports` from `nycflights13` to the
+database.
+
+```{r}
+con <- DBI::dbConnect(RSQLite::SQLite(), dbname = ":memory:")
+copy_to(con, df = nycflights13::airports, "airports")
+```
+
+```{r}
+airports_db <- tbl(con, "airports")
+```
+
+Also, add some baseball data from the `Lahman` package to our 
+in-memory database.
+
+```{r}
+dbWriteTable(con, "batting", Batting)
+dbWriteTable(con, "pitching", Pitching)
+dbWriteTable(con, "teams", Teams)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+What are the corresponding SQL verbs based on the `dplyr` structure below?
+
+```{r}
+airport_car <- airports_db %>% 
+  filter(lat >= 33.7666, lat <= 36.588, lon >= -84.3201, lon <= -75.4129) %>% 
+  arrange(desc(alt)) %>% 
+  select(name, alt)
+```
+
+## Solution
+
+```{r}
+airport_car %>% 
+  show_query()
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Add `Salaries` from package `Lahman` as a table to your in-memory database.
+
+## Solution
+
+```{r}
+dbWriteTable(con, "salaries", Salaries)
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Compute the team salaries for each team in 2016 and display the 5 teams with
+the highest payroll. Which team had the lowest payroll in that year?
+
+## Solution
+
+```{r}
+dbGetQuery(con, paste("SELECT teamID, SUM(salary) as payroll",
+                      "FROM salaries",
+                      "WHERE yearID = 2016",
+                      "GROUP BY teamID",
+                      "ORDER BY payroll DESC",
+                      "LIMIT 5"))
+```
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Who were the top 10 teams according to win percentage since 1990? *Hint*:
+https://www.w3schools.com/sql/func_sqlserver_cast.asp
+   
+## Solution
+
+```{r}
+dbGetQuery(con, paste("SELECT yearID, teamID, W, L, CAST(W as FLOAT) / G as wpct", 
+                      "FROM teams",
+                      "WHERE yearID >= 1990",
+                      "GROUP BY yearID, teamID",
+                      "ORDER BY wpct DESC",
+                      "LIMIT 10"))
+```
+
+# Exercise 5 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+How would you combine the batting and salaries tables to match up the players
+and years? Take a look at `?dplyr::join`. Try to combine the R data frame 
+objects `Batting` and `Salaries`.
+
+## Solution
+
+```{r}
+left_join(Batting, Salaries, by = c("playerID", "yearID"))
+```
+

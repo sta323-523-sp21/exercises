@@ -22,7 +22,7 @@ All exercises along with their solutions.
 | make                               | :white_check_mark:      |
 | Shiny part I                       |                         |
 | Shiny part II                      |                         |
-| Databases and SQL                  |                         |
+| Databases and SQL                  | :white_check_mark:      |
 | SQLite, sqlite3, and more          |                         |
 | Big data and R                     |                         |
 | Parallelization                    |                         |
