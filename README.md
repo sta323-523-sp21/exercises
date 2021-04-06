@@ -23,9 +23,9 @@ All exercises along with their solutions.
 | Shiny part I                       |                         |
 | Shiny part II                      |                         |
 | Databases and SQL                  | :white_check_mark:      |
-| SQLite, sqlite3, and more          |                         |
-| Big data and R                     |                         |
-| Parallelization                    |                         |
+| SQLite, sqlite3, and more          | :white_check_mark:      |
+| Memory and I/O                     | :white_check_mark:      |
+| Parallelization                    | :white_check_mark:      |
 | More parallelization and profiling |                         |
 | Spark & sparklyr part I            |                         |
 | Spark & sparklyr part II           |                         |

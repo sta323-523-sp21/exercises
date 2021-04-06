@@ -1,0 +1,158 @@
+---
+title: "Exercises: SQLite, sqlite3, and more"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Data
+
+From your home directory, copy `sql_databases/` from my home directory on the 
+DSS home file system.
+
+```bash
+cp -rf /home/fac/sms185/sql_databases ~/
+```
+
+You should see the following in `sql_databases/`:
+
+```bash
+[sms185@geometry2 sql_databases]$ ls
+taxi.sqlite  vet.sqlite
+```
+
+Load sqlite3 with the database `vet.sqlite`.
+
+```bash
+*[sms185@geometry2 sql_databases]$ sqlite3 vet.sqlite
+SQLite version 3.26.0 2018-12-01 12:34:55
+Enter ".help" for usage hints.
+sqlite>
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Which procedure types had an average price exceed $20? Sort them in descending
+order by average price. Only output a table with the procedure types and their 
+average price.
+
+<br/>
+
+```sql
+procedure_type     avg_price
+-----------------  ----------------
+GENERAL SURGERIES  312.526315789474
+ORTHOPEDIC         196.333333333333
+OFFICE FEES        52.0
+HOSPITALIZATION    25.0
+```
+
+## Solution
+
+```sql
+sqlite> SELECT procedure_type, AVG(price) as avg_price FROM procedure_details
+        GROUP BY procedure_type
+        HAVING AVG(price) > 20
+        ORDER BY AVG(price) DESC;
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Which owners have multiple pets? Sort your table so the count is in 
+descending order. Only output a table with the owners' name,
+surname and number of pets.
+   
+```sql
+owner_name  owner_surname  pet_count
+----------  -------------  ----------
+Lee         McKenzie       3
+Charles     Swarey         3
+Stacey      Randolph       3
+Benjamin    Spears         2
+Robert      Partridge      2
+Mario       Riddle         2
+Elvia       Warren         2
+Gary        Snider         2
+```
+
+## Solution
+
+```sql
+sqlite> SELECT owners.name AS owner_name, surname AS owner_surname,
+        COUNT(owners.owner_id) AS pet_count
+        FROM owners
+        LEFT JOIN pets ON owners.owner_id = pets.owner_id
+        GROUP BY owners.owner_id
+        HAVING COUNT(owners.owner_id) > 1
+        ORDER BY COUNT(owners.owner_id) DESC;
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Which pet under the age of 10 had the most procedures according to the
+procedure history? Only return a table with the pet's name, kind, age, and 
+number of procedures.
+   
+```sql
+name        kind        age         procedure_count
+----------  ----------  ----------  ---------------
+Bonaparte   Dog         4.0         3
+```
+
+## Solution
+
+```sql
+sqlite> SELECT pets.name, kind, age, COUNT(procedure_history.pet_id) as procedure_count
+        FROM pets
+        LEFT JOIN procedure_history ON pets.pet_id = procedure_history.pet_id
+        WHERE age < 10
+        GROUP BY procedure_history.pet_id
+        ORDER BY COUNT(procedure_history.pet_id) DESC
+        LIMIT 1;
+```
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Get a table that contains the owner id, owner name, owner surname, owner city,
+and the total price they spent on procedures corresponding to procedure sub
+code 05. Only consider those owners from Lansing, Detroit, and Grand Rapids.
+Sort your table in ascending order by city and descending order by the total
+price within each city.
+   
+## Solution
+
+```sql
+sqlite> SELECT owners.owner_id, owners.name, owners.surname, owners.city, 
+        SUM(price) AS sum_price 
+        FROM owners
+        LEFT JOIN pets ON owners.owner_id = pets.owner_id
+        LEFT JOIN procedure_history ON procedure_history.pet_id = pets.pet_id
+        LEFT JOIN procedure_details 
+          ON procedure_history.procedure_type = procedure_details.procedure_type 
+            AND procedure_history.procedure_sub_code = procedure_details.procedure_sub_code
+        WHERE (owners.city = "Grand Rapids" OR owners.city = "Detroit" 
+               OR owners.city = "Lansing") AND procedure_details.procedure_sub_code = "05"
+        GROUP BY owners.owner_id, owners.city
+        ORDER BY owners.city ASC, SUM(price) DESC;
+```

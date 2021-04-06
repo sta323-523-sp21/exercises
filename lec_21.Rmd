@@ -1,0 +1,99 @@
+---
+title: "Exercises: Memory and I/O"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(lobstr)
+library(tidyverse)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Can you diagnose what is going on below?
+
+```{r}
+x <- 1:10
+y <- x
+
+tracemem(x)
+c(obj_addr(x), obj_addr(y))
+
+y[1] <- 3
+```
+
+## Solution
+
+The question is, why are two copies being made? The vector `x` is of type
+integer. However, when we do subassignment and change the first component of
+`y` to be 3 (of type double) two copies are made. One for the modification of 
+the component, the other for the atomic vector type change.
+
+```{r}
+x <- 1:10
+y <- x
+
+tracemem(x)
+c(obj_addr(x), obj_addr(y))
+
+y[1] <- 3L # type integer
+```
+
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Starting from 0 we can see that
+
+```{r}
+lobstr::obj_size(integer(0))
+lobstr::obj_size(numeric(0))
+```
+
+are both 48 bytes. Run the code below and see if you can deduce how 
+R handles these numeric data in memory?
+
+```{r eval=FALSE}
+diff(sapply(0:100, function(x) obj_size(integer(x))))
+```
+
+```{r eval=FALSE}
+c(obj_size(integer(20)), obj_size(integer(22)))
+```
+
+```{r eval=FALSE}
+diff(sapply(0:100, function(x) obj_size(numeric(x))))
+```
+
+```{r eval=FALSE}
+c(obj_size(numeric(10)), obj_size(numeric(14)))
+```
+
+## Solution
+
+R allocates memory to vectors in chunks. An integer vector of length one is
+allocated 56 bytes, 8 more than a null integer vector. Since an integer
+component only requires 4 bytes of memory, an integer vector of length two is
+also only 56 bytes. R does not need any more memory. Hence, we see that
+`obj_size(integer(1))` and `obj_size(integer(2))` are the same. The `diff()`
+function calls give you an idea as to how memory is allocated in chunks.

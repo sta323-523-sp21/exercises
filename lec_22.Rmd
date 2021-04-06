@@ -1,0 +1,189 @@
+---
+title: "Exercises: Parallelization"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(bench)
+library(parallel)
+library(tidyverse)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Benchmark `which("q" ==  chars)[1]` and `match("q", chars)`, where 
+
+```{r eval=FALSE}
+chars <- sample(c(letters, 0:9), size = 1000, 
+                         replace = TRUE)
+```
+
+What do these expression do?
+
+## Solution
+
+```{r}
+chars <- sample(c(letters, 0:9), size = 1000, replace = TRUE)
+
+mark(
+  which("q" ==  chars)[1],
+  match("q", chars)
+)
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Benchmark the last two expression.
+
+```{r eval=FALSE}
+X <- matrix(rnorm(1000 * 1000), nrow = 1000, ncol = 1000)
+
+sum(diag(X %*% t(X)))
+sum(X ^ 2)
+```
+
+What do these expression do?
+
+## Solution
+
+```{r}
+X <- matrix(rnorm(1000 * 1000), nrow = 1000, ncol = 1000)
+
+mark(
+  sum(diag(X %*% t(X))),
+  sum(X ^ 2)
+)
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Do you notice anything strange with objects `result2` and `result4`? 
+What is going on?
+
+```{r}
+detectCores()
+
+result2 <- mclapply(1:12, FUN = function(x) rnorm(1), 
+                   mc.cores = 2, mc.set.seed = FALSE) %>% 
+  unlist()
+
+result2
+```
+
+```{r}
+result4 <- mclapply(1:12, FUN = function(x) rnorm(1), 
+                   mc.cores = 4, mc.set.seed = FALSE) %>% 
+  unlist()
+
+result4
+```
+
+## Solution
+
+When `mc.set.seed = FALSE`, the child process has the same initial random 
+number generator (RNG) state as the current R session. Hence, we see the same
+numbers generated two times and four times when we use two and four cores,
+respectively.
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Parallelize the evaluation of the four expressions below.
+
+```{r eval=FALSE}
+mtcars %>% 
+  count(cyl)
+
+mtcars %>% 
+  lm(mpg ~ wt + hp + factor(cyl), data = .)
+
+map_chr(mtcars, typeof)
+
+mtcars %>% 
+  select(mpg, disp:qsec) %>% 
+  map_df(summary)
+```
+
+## Solution
+
+```{r}
+x <- list()
+
+x$expr1 <- mcparallel({
+  mtcars %>% 
+  count(cyl)
+})
+
+x$expr2 <- mcparallel({
+  mtcars %>% 
+    lm(mpg ~ wt + hp + factor(cyl), data = .)
+})
+
+x$expr3 <- mcparallel({
+  map_chr(mtcars, typeof)
+})
+
+x$expr4 <- mcparallel({
+  mtcars %>% 
+    select(mpg, disp:qsec) %>% 
+    map_df(summary)
+})
+```
+
+```{r}
+mccollect(x)
+```
+
+
+# Exercise 5 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Suppose you only have two cores. Use `mclapply()` to execute the below
+function in parallel so the total run-time is six seconds.
+
+```{r}
+sleep_r <- function(x) {
+  Sys.sleep(x)
+  runif(1)
+}
+
+x <- c(3, 3, 6)
+```
+
+## Solution
+
+```{r}
+aff_list_bal <- c(1, 1, 2)
+
+system.time({
+  mclapply(x, sleep_r, mc.cores = 2,
+           mc.preschedule = FALSE, affinity.list = aff_list_bal)
+})
+```
+
+
