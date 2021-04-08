@@ -26,7 +26,9 @@ All exercises along with their solutions.
 | SQLite, sqlite3, and more          | :white_check_mark:      |
 | Memory and I/O                     | :white_check_mark:      |
 | Parallelization                    | :white_check_mark:      |
-| More parallelization and profiling |                         |
+| More parallelization and profiling | :white_check_mark:      |
+| Futures and furrr                  |                         |
+| Data bigger than RAM               |                         |
 | Spark & sparklyr part I            |                         |
 | Spark & sparklyr part II           |                         |
 
